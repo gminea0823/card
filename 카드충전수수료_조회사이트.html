@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>카드충전수수료 지급내역</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root{--bg:#0f1117;--bg2:#1a1d27;--bg3:#22263a;--border:#2e3348;--border2:#3d4262;--text:#e8eaf6;--text2:#9ba3c7;--text3:#5c6490;--accent:#5c73f2;--accent2:#7b93ff;--accent-bg:rgba(92,115,242,.12);--green:#3ecf8e}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',-apple-system,sans-serif;font-size:13px}
+.topbar{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.logo{font-size:15px;font-weight:700;color:var(--accent2)}
+.logo em{color:var(--text2);font-style:normal;font-weight:400;font-size:12px;margin-left:8px}
+.btn{padding:7px 14px;border-radius:8px;border:1px solid var(--border2);background:var(--bg3);color:var(--text);font-size:12px;cursor:pointer;display:flex;align-items:center;gap:6px;font-family:inherit;transition:all .15s}
+.btn:hover{background:var(--accent-bg);border-color:var(--accent);color:var(--accent2)}
+.dbtn{padding:5px 10px;border-radius:6px;border:1px solid var(--border2);background:var(--bg3);color:var(--text2);font-size:11px;cursor:pointer;font-family:inherit;transition:all .15s}
+.dbtn:hover{background:rgba(239,68,68,.12);border-color:#ef4444;color:#ef4444}
+.content{padding:20px 24px}
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:16px}
+.scard{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px 16px}
+.slabel{font-size:11px;color:var(--text3);margin-bottom:6px;letter-spacing:.3px}
+.sval{font-size:20px;font-weight:700;line-height:1}
+.sval.a{color:var(--accent2)}.sval.g{color:var(--green)}
+.fbar{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:12px 16px;margin-bottom:10px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.sw{position:relative;flex:1;min-width:200px}
+.sw svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--text3)}
+input.si{width:100%;padding:8px 12px 8px 34px;background:var(--bg3);border:1px solid var(--border2);border-radius:7px;color:var(--text);font-size:13px;font-family:inherit;outline:none}
+input.si:focus{border-color:var(--accent)}input.si::placeholder{color:var(--text3)}
+select.fs{padding:8px 26px 8px 10px;background:var(--bg3);border:1px solid var(--border2);border-radius:7px;color:var(--text);font-size:12px;font-family:inherit;outline:none;cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg width='10' height='6' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%235c6490' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;min-width:90px}
+select.fs:focus{border-color:var(--accent)}select.fs option{background:var(--bg3)}
+.tw{background:var(--bg2);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.tc{overflow-x:auto;max-height:calc(100vh - 370px);overflow-y:auto}
+table{width:100%;border-collapse:collapse;min-width:900px;table-layout:fixed}
+thead{position:sticky;top:0;z-index:10}
+th:nth-child(1),td:nth-child(1){width:15%}
+th:nth-child(2),td:nth-child(2){width:8%}
+th:nth-child(3),td:nth-child(3){width:12%}
+th:nth-child(4),td:nth-child(4){width:10%}
+th:nth-child(5),td:nth-child(5){width:12%}
+th:nth-child(6),td:nth-child(6){width:36%}
+th:nth-child(7),td:nth-child(7){width:7%}
+th{background:var(--bg3);color:var(--text2);font-weight:600;font-size:11px;letter-spacing:.4px;text-transform:uppercase;padding:11px 12px;text-align:left;border-bottom:1px solid var(--border);white-space:nowrap;user-select:none;cursor:pointer}
+th:hover{color:var(--text)}.si2{margin-left:4px;color:var(--text3);font-size:10px}
+th.sorted{color:var(--accent2)}
+td{padding:9px 12px;border-bottom:1px solid var(--border);vertical-align:middle;white-space:nowrap}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(92,115,242,.04)}
+tr.total td{background:var(--bg3);border-top:2px solid var(--border2);font-weight:700;color:var(--accent2)}
+tr.addrow td{text-align:center;padding:12px;color:var(--text3);cursor:pointer;font-weight:600;transition:all .15s}
+tr.addrow:hover td{background:var(--accent-bg);color:var(--accent2)}
+.am{text-align:right;font-family:'SF Mono','Fira Code',monospace;font-size:12px}
+.am.p{color:var(--green)}.am.z{color:var(--text3)}
+.mc{overflow:hidden}
+input.mi{width:100%;background:transparent;border:1px solid transparent;border-radius:5px;color:var(--text);font-size:12px;font-family:inherit;padding:3px 6px;outline:none}
+input.mi:hover{border-color:var(--border2);background:var(--bg3)}input.mi:focus{border-color:var(--accent);background:var(--bg3)}input.mi::placeholder{color:var(--text3)}
+input.mi.amt{text-align:right}
+.pn{font-weight:600;overflow:hidden;text-overflow:ellipsis}
+.mh{text-align:right}
+.nodata{padding:40px;text-align:center;color:var(--text3)}
+.rc{padding:10px 16px;border-top:1px solid var(--border);font-size:11px;color:var(--text3);display:flex;justify-content:space-between;align-items:center}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="logo">💳 카드충전수수료 <em>지급내역 조회 시스템</em></div>
+  <button class="btn" onclick="exportExcel()">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    엑셀 다운로드
+  </button>
+</div>
+<div class="content">
+  <div class="stats" id="stats"></div>
+  <div class="fbar">
+    <select class="fs" id="colf" onchange="applyF()">
+      <option value="">전체 컬럼</option>
+      <option value="협력사">협력사</option>
+      <option value="은행">은행</option>
+      <option value="계좌번호">계좌번호</option>
+    </select>
+    <select class="fs" id="amtf" onchange="applyF()">
+      <option value="">금액 전체</option>
+      <option value="has">금액 있음</option>
+      <option value="none">금액 없음</option>
+    </select>
+    <div class="sw">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input class="si" id="search" placeholder="협력사명, 은행, 계좌번호 검색..." oninput="applyF()">
+    </div>
+  </div>
+  <div class="fbar" style="padding:10px 14px">
+    <span style="font-size:11px;color:var(--text3);white-space:nowrap">협력사 정렬:</span>
+    <select class="fs" id="compSort" onchange="setCompSort(this.value)">
+      <option value="recent">최근 등록순</option>
+      <option value="name">이름순</option>
+    </select>
+  </div>
+  <div class="fbar" style="padding:10px 14px">
+    <span style="font-size:11px;color:var(--text3);white-space:nowrap">조회 기간:</span>
+    <select class="fs" id="yearSel" onchange="selectY(this.value)"></select>
+    <select class="fs" id="monthSel" onchange="selectM(this.value)"></select>
+    <button class="dbtn" id="resetAmtBtn" style="margin-left:auto" onclick="resetAmounts()"></button>
+    <span id="saveIndicator" style="font-size:11px;color:var(--text3);white-space:nowrap"></span>
+  </div>
+  <div class="tw">
+    <div class="tc"><table><thead><tr id="thead"></tr></thead><tbody id="tbody"></tbody></table></div>
+    <div class="rc"><span id="rct">로딩중...</span><span>* 마지막 행 = 합계</span></div>
+  </div>
+</div>
+
+<script>
+const D=[{"협력사": "가능지사(1월)", "은행": "", "계좌번호": "", "1월": 107763, "2월": 107763, "id": 0, "memo": ""}, {"협력사": "강북지사(김중성)", "은행": "제일", "계좌번호": "강북지사", "1월": 188265, "2월": 172260, "3월": 127045, "4월": 136180, "5월": 88605, "7월": 77000, "id": 1, "memo": ""}, {"협력사": "고산지사", "은행": "제일은행", "계좌번호": "37916000125757", "1월": 207900, "2월": 107004, "id": 2, "memo": ""}, {"협력사": "고성지사", "은행": "제일은행", "계좌번호": "37916000042444", "1월": 375540, "2월": 373230, "3월": 320540, "4월": 310200, "5월": 351890, "6월": 365090, "7월": 411730, "8월": 417780, "11월": 354750, "12월": 411620, "id": 3, "memo": ""}, {"협력사": "공릉지사(박길자)", "은행": "제일은행", "계좌번호": "37916000151479", "1월": 67925, "2월": 63635, "3월": 24310, "4월": 24310, "id": 4, "memo": ""}, {"협력사": "광주광산센터(윤호)", "은행": "제일은행", "계좌번호": "37916000043376", "1월": 828190, "2월": 541200, "3월": 496650, "4월": 496650, "6월": 443300, "8월": 560450, "10월": 516450, "id": 5, "memo": ""}, {"협력사": "금천본부(전민규)", "은행": "제일은행", "계좌번호": "서울남부2(본부)", "1월": 27834324, "2월": 23886718, "3월": 23262372, "4월": 21266066, "5월": 23024952, "6월": 23301598, "7월": 42805106, "8월": 42727118, "11월": 32036248, "12월": 33337815, "id": 6, "memo": ""}, {"협력사": "나주지사(김효숙)", "은행": "제일은행023", "계좌번호": "37916000131939", "1월": 935270, "2월": 907577, "3월": 972070, "4월": 972070, "5월": 927740, "6월": 927740, "8월": 976932, "10월": 941193, "id": 7, "memo": ""}, {"협력사": "대구센터(이태호)", "은행": "제일은행", "계좌번호": "대구1센터(본부대구센터)", "1월": 5988687, "2월": 5359453, "3월": 5106932, "4월": 4826624, "7월": 11735803, "11월": 3979140, "12월": 11909793, "id": 8, "memo": ""}, {"협력사": "대천지사", "은행": "제일은행", "계좌번호": "37916000106590", "5월": 1650, "7월": 378491, "id": 9, "memo": ""}, {"협력사": "합천지사", "은행": "제일은행", "계좌번호": "37916000057310", "1월": 17600, "2월": 18700, "4월": 13200, "id": 10, "memo": ""}, {"협력사": "만안본부지사(원재희)", "은행": "제일", "계좌번호": "경기안양센터", "1월": 1663338, "2월": 1511730, "3월": 1369264, "4월": 1209505, "id": 11, "memo": ""}, {"협력사": "의정부본부 윤성식", "은행": "제일은행", "계좌번호": "37916000102785", "1월": 536152, "2월": 207864, "id": 12, "memo": ""}, {"협력사": "의정부 민락지사", "은행": "", "계좌번호": "", "1월": 173378, "2월": 33278, "id": 13, "memo": ""}, {"협력사": "방학지사(송형근)", "은행": "제일은행", "계좌번호": "37916000103475", "1월": 185020, "2월": 142010, "id": 14, "memo": ""}, {"협력사": "오산지사", "은행": "제일", "계좌번호": "37916000100025", "1월": 2183996, "2월": 1665142, "3월": 1529180, "4월": 1188622, "id": 15, "memo": ""}, {"협력사": "온양지사", "은행": "", "계좌번호": "", "1월": 56540, "4월": 175340, "8월": 134860, "12월": 127930, "id": 16, "memo": ""}, {"협력사": "평택", "은행": "", "계좌번호": "", "1월": 59950, "2월": 39600, "4월": 23100, "id": 17, "memo": ""}, {"협력사": "원당센터(김당롱)", "은행": "제일은행", "계좌번호": "37916000102207", "1월": 663300, "2월": 513370, "id": 18, "memo": ""}, {"협력사": "인천본부(박채인)", "은행": "제일은행", "계좌번호": "인천본부센터", "1월": 183700, "2월": 105710, "4월": 103895, "id": 19, "memo": ""}, {"협력사": "제천지사(전효진)", "은행": "제일은행", "계좌번호": "37916000124347", "1월": 134090, "2월": 133650, "3월": 103510, "4월": 91300, "5월": 92400, "6월": 104720, "8월": 90200, "10월": 176113, "11월": 228088, "id": 20, "memo": ""}, {"협력사": "증평지사(박원빈란)", "은행": "제일은행", "계좌번호": "37916000151528", "1월": 764280, "2월": 764280, "4월": 592020, "6월": 619301, "7월": 988845, "11월": 781358, "id": 21, "memo": ""}, {"협력사": "진영지사(이현근대표)", "은행": "제일은행", "계좌번호": "37916000102867", "1월": 244750, "2월": 218753, "id": 22, "memo": ""}, {"협력사": "청년점", "은행": "", "계좌번호": "", "id": 23, "memo": ""}, {"협력사": "청주가경지사(최병현)", "은행": "제일은행", "계좌번호": "37916000133748", "1월": 1410420, "2월": 1272260, "4월": 1530210, "5월": 1335675, "6월": 1061115, "7월": 1176560, "8월": 1331330, "10월": 1308236, "11월": 797610, "id": 24, "memo": ""}, {"협력사": "청주복대지사(안인호)", "은행": "제일", "계좌번호": "37916000170021", "1월": 311850, "2월": 278520, "4월": 308220, "7월": 275055, "8월": 268620, "id": 25, "memo": ""}, {"협력사": "청주북문지사(반충현)", "은행": "제일은행", "계좌번호": "37916000148207", "1월": 202290, "id": 26, "memo": ""}, {"협력사": "청주상당센터(박윤미)", "은행": "제일은행", "계좌번호": "37916000143664", "1월": 920150, "2월": 765545, "4월": 136950, "6월": 130240, "id": 27, "memo": ""}, {"협력사": "청주서원산남(이태준)", "은행": "제일은행", "계좌번호": "37916000137135", "1월": 141020, "2월": 128370, "id": 28, "memo": ""}, {"협력사": "서원수곡지사(조윤호)", "은행": "", "계좌번호": "", "1월": 253550, "2월": 262735, "id": 29, "memo": ""}, {"협력사": "청주서원센터 양심콜(전종석)", "은행": "제일은행", "계좌번호": "37916000151506", "1월": 1038369, "2월": 764895, "3월": 984147, "4월": 903925, "5월": 788565, "6월": 1299693, "7월": 1539884, "10월": 958594, "12월": 912659, "id": 30, "memo": ""}, {"협력사": "청주서충주(이우진)", "은행": "제일", "계좌번호": "37916000176343", "1월": 504130, "2월": 532070, "4월": 363440, "id": 31, "memo": ""}, {"협력사": "청주세종부강지사", "은행": "제일은행", "계좌번호": "37916000100663", "1월": 194260, "2월": 220440, "4월": 229680, "10월": 201080, "id": 32, "memo": ""}, {"협력사": "청주충청사업본부(권태정)", "은행": "제일", "계좌번호": "37916000151491", "1월": 7808944, "2월": 6949883, "3월": 6912682, "4월": 8729502, "6월": 13567449, "7월": 16324502, "8월": 39000000, "9월": 36843488, "10월": 47688644, "11월": 43649170, "12월": 41842226, "id": 33, "memo": ""}, {"협력사": "청주금천(민준호)", "은행": "제일은행", "계좌번호": "37916000151491", "id": 34, "memo": ""}, {"협력사": "청주퍼스트1(정원화)", "은행": "신한은행", "계좌번호": "56212529969078", "1월": 604285, "2월": 540210, "4월": 957394, "6월": 2743692, "7월": 2622629, "8월": 3305077, "11월": 2595973, "12월": 2448338, "id": 35, "memo": ""}, {"협력사": "청주퍼스트1-2(전성숙)이동호", "은행": "제일은행", "계좌번호": "37916000150547", "1월": 768240, "2월": 768240, "4월": 516230, "5월": 1421032, "6월": 2156834, "7월": 3635080, "8월": 9608175, "9월": 8575935, "10월": 15655767, "11월": 15663585, "12월": 12773199, "id": 36, "memo": ""}, {"협력사": "청주퍼스트1-4(이제훈)", "은행": "제일은행", "계좌번호": "37916000150850", "1월": 14300, "2월": 14300, "id": 37, "memo": ""}, {"협력사": "청주퍼스트버블(윤일)", "은행": "제일은행", "계좌번호": "37916000176354", "id": 38, "memo": ""}, {"협력사": "퍼스트블랙", "은행": "", "계좌번호": "", "1월": 10450, "2월": 91300, "4월": 102850, "6월": 79310, "7월": 86900, "id": 39, "memo": ""}, {"협력사": "퍼스트충북대", "은행": "", "계좌번호": "", "1월": 87450, "2월": 7480, "4월": 85580, "id": 40, "memo": ""}, {"협력사": "넥스트성안김영웅", "은행": "", "계좌번호": "", "1월": 392755, "2월": 482280, "4월": 407605, "5월": 382013, "6월": 404353, "7월": 419057, "8월": 456936, "10월": 2686294, "12월": 467742, "id": 41, "memo": ""}, {"협력사": "넥스트청원최태민", "은행": "", "계좌번호": "", "1월": 23650, "2월": 54199, "4월": 46530, "7월": 25773, "id": 42, "memo": ""}, {"협력사": "넥스트우암김진하", "은행": "", "계좌번호": "", "1월": 3850, "2월": 11550, "4월": 110000, "id": 43, "memo": ""}, {"협력사": "내덕우암박진영", "은행": "", "계좌번호": "", "1월": 2200, "2월": 146630, "4월": 67210, "6월": 41900, "id": 44, "memo": ""}, {"협력사": "청주퍼스트용암(권혁근)", "은행": "제일은행", "계좌번호": "37916000143686", "1월": 633380, "2월": 627000, "4월": 882350, "6월": 1464317, "7월": 2513054, "8월": 2747389, "11월": 3306327, "12월": 4181191, "id": 45, "memo": ""}, {"협력사": "딜리온용암(최정우)", "은행": "", "계좌번호": "", "1월": 82170, "2월": 88000, "4월": 51150, "id": 46, "memo": ""}, {"협력사": "화성남양지사", "은행": "제일은행", "계좌번호": "37916000100570", "1월": 2629277, "2월": 2471445, "3월": 2347908, "4월": 2308163, "5월": 2558743, "6월": 2748402, "7월": 3897340, "8월": 3381295, "10월": 3368739, "11월": 3145022, "12월": 4247287, "id": 47, "memo": ""}, {"협력사": "신부평중앙지사", "은행": "웰컴저축은행", "계좌번호": "6601230065354", "1월": 378950, "2월": 300245, "3월": 299475, "4월": 266750, "5월": 264715, "6월": 253330, "7월": 364155, "8월": 384725, "10월": 385055, "12월": 253990, "id": 48, "memo": ""}, {"협력사": "인천로데오지사", "은행": "", "계좌번호": "", "1월": 61665, "2월": 30745, "4월": 34045, "id": 49, "memo": ""}, {"협력사": "하태민", "은행": "", "계좌번호": "", "6월": 3509871, "id": 50, "memo": ""}, {"협력사": "박찬민", "은행": "새마을금고", "계좌번호": "9003242244925", "id": 51, "memo": ""}, {"협력사": "지오아이앤씨", "은행": "신한", "계좌번호": "140012070741", "id": 52, "memo": ""}, {"협력사": "지오테크넷", "은행": "기업은행003", "계좌번호": "54002166604015", "1월": 19800, "2월": 16500, "id": 53, "memo": ""}, {"협력사": "써니키친(지현주)", "은행": "신한", "계좌번호": "110460436297", "1월": 322850, "2월": 560725, "4월": 257730, "6월": 298100, "7월": 279430, "8월": 264550, "10월": 188650, "11월": 177925, "12월": 173985, "id": 54, "memo": ""}, {"협력사": "안정컴퍼니", "은행": "기업은행003", "계좌번호": "54807960504011", "1월": 141350, "2월": 59400, "id": 55, "memo": ""}, {"협력사": "유나컴퍼니", "은행": "기업은행003", "계좌번호": "46505873704016", "1월": 221562, "2월": 164175, "3월": 160545, "4월": 151789, "5월": 157256, "6월": 133738, "7월": 173877, "8월": 181159, "id": 56, "memo": ""}, {"협력사": "정훈(2월분) 태왕애드컴", "은행": "경남은행", "계좌번호": "2070008138104", "1월": 85121, "2월": 74407, "3월": 5460, "4월": 5460, "id": 57, "memo": ""}, {"협력사": "박병영", "은행": "농협 011", "계좌번호": "3560087486563", "1월": 1987334, "2월": 1476849, "3월": 1516350, "4월": 1270500, "8월": 1080090, "9월": 934670, "10월": 700337, "11월": 559460, "12월": 599610, "id": 58, "memo": ""}, {"협력사": "강북생각대로(김진표)jc", "은행": "카카오뱅크", "계좌번호": "3333266599332", "1월": 165638, "2월": 92967, "3월": 78022, "4월": 46590, "5월": 23100, "7월": 54249, "id": 59, "memo": ""}, {"협력사": "최용진매니저", "은행": "우리은행", "계좌번호": "1002744927112", "1월": 31911, "2월": 31911, "3월": 31911, "4월": 31911, "5월": 31911, "7월": 31911, "id": 60, "memo": ""}, {"협력사": "가능지사(2월)", "은행": "", "계좌번호": "", "2월": 55000, "id": 61, "memo": ""}, {"협력사": "가능지사", "은행": "", "계좌번호": "", "3월": 62700, "4월": 62700, "id": 62, "memo": ""}, {"협력사": "청주강서지사(이기쁨)", "은행": "", "계좌번호": "", "3월": 54450, "4월": 54450, "7월": 177100, "id": 63, "memo": ""}, {"협력사": "인터하이텍", "은행": "신한은행", "계좌번호": "100031088607", "3월": 1285943, "4월": 3203380, "6월": 2985969, "11월": 2934374, "id": 64, "memo": ""}, {"협력사": "청주서원산남(이태준)12251", "은행": "제일은행", "계좌번호": "37916000137135", "4월": 54010, "5월": 63690, "7월": 90200, "8월": 67870, "10월": 92510, "11월": 61270, "id": 65, "memo": ""}, {"협력사": "모충지사(김민철)", "은행": "", "계좌번호": "", "4월": 39160, "5월": 44880, "7월": 114290, "8월": 150700, "10월": 141900, "11월": 138050, "id": 66, "memo": ""}, {"협력사": "퍼스트프렌즈(최미소)", "은행": "", "계좌번호": "", "4월": 320760, "7월": 349690, "8월": 317790, "10월": 371030, "11월": 361680, "12월": 387860, "id": 67, "memo": ""}, {"협력사": "청주지웰스(양승호)", "은행": "", "계좌번호": "", "4월": 112860, "id": 68, "memo": ""}, {"협력사": "퍼스트고고퀵(김범수", "은행": "", "계좌번호": "", "4월": 256850, "7월": 365090, "8월": 397870, "10월": 386230, "11월": 325069, "12월": 328240, "id": 69, "memo": ""}, {"협력사": "강서지사(이기쁨)", "은행": "", "계좌번호": "", "4월": 166540, "6월": 142010, "8월": 140250, "11월": 307890, "id": 70, "memo": ""}, {"협력사": "오창2(안대호)", "은행": "", "계좌번호": "", "4월": 128260, "5월": 122320, "6월": 213510, "7월": 280610, "8월": 271590, "10월": 286660, "11월": 255090, "12월": 334730, "id": 71, "memo": ""}, {"협력사": "오창3(이정찬)", "은행": "", "계좌번호": "", "4월": 81180, "5월": 86350, "6월": 178970, "7월": 297660, "8월": 301290, "10월": 473880, "11월": 435490, "id": 72, "memo": ""}, {"협력사": "오창1", "은행": "`", "계좌번호": "", "4월": 81400, "5월": 120450, "id": 73, "memo": ""}, {"협력사": "목포바로고", "은행": "", "계좌번호": "", "4월": 21065, "id": 74, "memo": ""}, {"협력사": "우리동네(이진우)", "은행": "신한", "계좌번호": "100037516146", "4월": 474324, "5월": 1417565, "6월": 2312698, "7월": 2859122, "8월": 3561701, "9월": 2545067, "10월": 2545067, "11월": 2274738, "12월": 2525829, "id": 75, "memo": ""}, {"협력사": "만안6 장현범", "은행": "", "계좌번호": "", "5월": 119570, "id": 76, "memo": ""}, {"협력사": "퍼스트용암(권혁근)", "은행": "", "계좌번호": "", "5월": 580102, "id": 77, "memo": ""}, {"협력사": "몬스터센터", "은행": "", "계좌번호": "", "5월": 276846, "id": 78, "memo": ""}, {"협력사": "퍼스트충북대(김승범)", "은행": "", "계좌번호": "", "5월": 105710, "6월": 78320, "7월": 114730, "8월": 92840, "10월": 120010, "11월": 60500, "id": 79, "memo": ""}, {"협력사": "최용진대표", "은행": "", "계좌번호": "", "5월": 970406, "id": 80, "memo": ""}, {"협력사": "오산", "은행": "농협 011", "계좌번호": "40114556063415", "5월": 992678, "6월": 924052, "7월": 3855641, "8월": 584265, "11월": 55614056, "12월": 1933931, "id": 81, "memo": ""}, {"협력사": "금천지사(윤성열)", "은행": "", "계좌번호": "", "6월": 112640, "8월": 339680, "10월": 338300, "11월": 336930, "12월": 497970, "id": 82, "memo": ""}, {"협력사": "개신지사(유다은)", "은행": "우체국", "계좌번호": "110007883831", "6월": 293700, "7월": 293700, "id": 83, "memo": ""}, {"협력사": "딜리온탑지사(최재민)", "은행": "", "계좌번호": "", "6월": 40590, "7월": 116600, "10월": 342540, "11월": 339570, "12월": 385770, "id": 84, "memo": ""}, {"협력사": "최영진대표(위드컴퍼니)", "은행": "", "계좌번호": "", "6월": 2343788, "7월": 3440272, "11월": 8711526, "12월": 10038435, "id": 85, "memo": ""}, {"협력사": "서부센터  김동선", "은행": "하나은행", "계좌번호": "58991035275107", "6월": 1599972, "7월": 1674181, "8월": 2323623, "9월": 2002022, "10월": 2269351, "11월": 2083222, "12월": 2546474, "id": 86, "memo": ""}, {"협력사": "은평(라온콜) 김재호", "은행": "하나은행", "계좌번호": "58091062114107", "6월": 1496566, "7월": 1936750, "8월": 2605295, "9월": 2506655, "10월": 2977609, "11월": 3179009, "12월": 3451876, "id": 87, "memo": ""}, {"협력사": "더몬스터센터", "은행": "국민은행", "계좌번호": "44370104343574", "6월": 575376, "7월": 732443, "id": 88, "memo": ""}, {"협력사": "영남본부(딜리버리브로)도시광역 이진필", "은행": "우리은행", "계좌번호": "1005 704 767892", "6월": 157138, "7월": 517537, "8월": 1078547, "11월": 955902, "id": 89, "memo": ""}, {"협력사": "도시광역 올타임센터 박상진", "은행": "농협 011", "계좌번호": "3550089944753", "6월": 225782, "7월": 236788, "id": 90, "memo": ""}, {"협력사": "대한지사(최영덕)", "은행": "", "계좌번호": "", "7월": 46200, "10월": 83600, "12월": 98560, "id": 91, "memo": ""}, {"협력사": "의정부본부(엠알엠)", "은행": "하나은행", "계좌번호": "220120021600004", "7월": 1566166, "8월": 2590812, "9월": 2552130, "10월": 3732248, "11월": 4131796, "12월": 3943162, "id": 92, "memo": ""}, {"협력사": "직빵직영(오현아)", "은행": "신협", "계좌번호": "132110297721", "7월": 61758, "8월": 61710, "10월": 1100, "11월": 84370, "id": 93, "memo": ""}, {"협력사": "직빵2 (최영철)", "은행": "", "계좌번호": "", "7월": 22000, "8월": 18150, "10월": 29150, "12월": 1207690, "id": 94, "memo": ""}, {"협력사": "진천혁신지사", "은행": "농협", "계좌번호": "351 1215 3267 23", "7월": 376860, "8월": 585090, "10월": 960630, "id": 95, "memo": ""}, {"협력사": "이월배달", "은행": "", "계좌번호": "", "id": 96, "memo": ""}, {"협력사": "퍼스트블랙(김수종)", "은행": "", "계좌번호": "", "8월": 85091, "10월": 10230, "11월": 7480, "id": 97, "memo": ""}, {"협력사": "더몬스터센터(지슬비)", "은행": "국민은행", "계좌번호": "44370104343574", "8월": 1236134, "9월": 1063183, "10월": 1509381, "11월": 1507313, "12월": 2071975, "id": 98, "memo": ""}, {"협력사": "직빵개신지사(유정현)", "은행": "우체국(유다은)", "계좌번호": "110-0078-83831", "8월": 348150, "10월": 240900, "11월": 294030, "12월": 314160, "id": 99, "memo": ""}, {"협력사": "직빵3(조여원)", "은행": "", "계좌번호": "", "8월": 18700, "10월": 28600, "id": 100, "memo": ""}, {"협력사": "유나컴퍼니(백선희)", "은행": "하나은행", "계좌번호": "29791023855707", "9월": 157927, "10월": 168080, "11월": 163614, "12월": 175835, "id": 101, "memo": ""}, {"협력사": "송형근", "은행": "하나", "계좌번호": "22091001637604", "9월": 879184, "11월": 897160, "12월": 2935824, "id": 102, "memo": ""}, {"협력사": "평택포승", "은행": "", "계좌번호": "", "10월": 364540, "11월": 314490, "id": 103, "memo": ""}, {"협력사": "오창4(이희구)", "은행": "`", "계좌번호": "", "10월": 121330, "11월": 129690, "id": 104, "memo": ""}, {"협력사": "새로솔루션(한기현)", "은행": "국민", "계좌번호": "226202-04-230027", "10월": 4880568, "11월": 3426182, "12월": 3800253, "id": 105, "memo": ""}, {"협력사": "제이제이런(신세계)", "은행": "중소기업", "계좌번호": "399-150406-04-013", "10월": 649833, "id": 106, "memo": ""}, {"협력사": "임팩트(강경호)", "은행": "기업", "계좌번호": "031-06942801010", "10월": 649833, "11월": 680476, "id": 107, "memo": ""}, {"협력사": "세종부강지사", "은행": "제일은행", "계좌번호": "37916000100663", "11월": 231660, "id": 108, "memo": ""}, {"협력사": "진천혁신지사(콜고)", "은행": "농협", "계좌번호": "351 1215 3267 23", "11월": 1050060, "12월": 1102860, "id": 109, "memo": ""}, {"협력사": "제이제이런", "은행": "기업은행003", "계좌번호": "39915040604013(신세계)", "11월": 251693, "12월": 168891, "id": 110, "memo": ""}, {"협력사": "김중성(북부)", "은행": "국민은행", "계좌번호": "92215083749", "11월": 88000, "id": 111, "memo": ""}, {"협력사": "바로고파트너(우종은)", "은행": "새마을금ㅋ고", "계좌번호": "9003264619591", "11월": 127710, "id": 112, "memo": ""}, {"협력사": "엠바이크(정광혁)", "은행": "카카오뱅크", "계좌번호": "3333074121922", "11월": 782061, "12월": 970238, "id": 113, "memo": ""}, {"협력사": "광주센터", "은행": "", "계좌번호": "", "12월": 389950, "id": 114, "memo": ""}, {"협력사": "도시광역영남(딜리버리브로)", "은행": "우리은행", "계좌번호": "1005704767892", "12월": 930663, "id": 115, "memo": ""}, {"협력사": "도시광역호남", "은행": "", "계좌번호": "", "id": 116, "memo": ""}, {"협력사": "투더제트", "은행": "", "계좌번호": "", "12월": 1031360, "id": 117, "memo": ""}];
+const M=['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+const Y=['2024년','2025년','2026년','2027년'];
+const today=new Date();
+const curYearLabel=`${today.getFullYear()}년`;
+let sc='협력사',sa=true;
+let selY=Y.includes(curYearLabel)?curYearLabel:Y[Y.length-1];
+let selM=M[today.getMonth()];
+let fd=[...D],mm={};
+D.forEach(d=>{mm[d.id]=d.memo||'';});
+
+const STORAGE_KEY='cardFeeData_v1';
+function loadSaved(){
+  try{
+    const raw=localStorage.getItem(STORAGE_KEY);
+    if(!raw) return;
+    const saved=JSON.parse(raw);
+    if(Array.isArray(saved.D)&&saved.D.length){
+      D.length=0;
+      saved.D.forEach(r=>D.push(r));
+      Object.keys(mm).forEach(k=>delete mm[k]);
+      D.forEach(d=>{mm[d.id]=(saved.mm&&saved.mm[d.id])||d.memo||'';});
+    }
+  }catch(e){}
+}
+loadSaved();
+
+function fmt(n){if(!n)return '';return Math.round(n).toLocaleString('ko-KR');}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function rt(row){return M.reduce((s,m)=>s+(row[m]||0),0);}
+
+function yearSelect(){
+  const el=document.getElementById('yearSel');
+  el.innerHTML=Y.map(y=>`<option value="${y}" ${selY===y?'selected':''}>${y}</option>`).join('');
+}
+function selectY(y){selY=y;render();}
+function monthSelect(){
+  const el=document.getElementById('monthSel');
+  el.innerHTML=M.map(m=>`<option value="${m}" ${selM===m?'selected':''}>${m}</option>`).join('');
+}
+function selectM(m){selM=m;render();}
+
+function thead(){
+  const tr=document.getElementById('thead');
+  const cols=[
+    {k:'협력사',l:'협력사'},{k:'은행',l:'은행'},{k:'계좌번호',l:'계좌번호'},
+    {k:'금액',l:`${selY} ${selM} 금액`,mo:true},
+    {k:'과세기사콜비부가세',l:'과세기사콜비부가세',mo:true,ns:true},
+    {k:'memo',l:'메모',ns:true},
+    {k:'관리',l:'관리',ns:true}
+  ];
+  tr.innerHTML=cols.map(c=>{
+    const s=sc===c.k?'sorted':'';
+    const ic=sc===c.k?(sa?'▲':'▼'):'⇅';
+    const al=c.mo||c.ca?'mh':'';
+    const nc=c.ns?'style="cursor:default"':'';
+    const oc=c.ns?'':`onclick="sortBy('${c.k}')"`;
+    return `<th class="${s} ${al}" ${nc} ${oc}>${c.l}${!c.ns?`<span class="si2">${ic}</span>`:''}</th>`;
+  }).join('');
+}
+
+function sortBy(col){if(sc===col) sa=!sa; else{sc=col;sa=true;} render();}
+
+function setCompSort(v){
+  if(v==='recent'){sc='id';sa=false;}
+  else{sc='협력사';sa=true;}
+  render();
+}
+
+function applyF(){
+  const q=document.getElementById('search').value.trim().toLowerCase();
+  const cf=document.getElementById('colf').value;
+  const af=document.getElementById('amtf').value;
+  fd=D.filter(row=>{
+    if(q){
+      let h='';
+      if(!cf||cf==='협력사') h+=(row['협력사']||'').toLowerCase();
+      if(!cf||cf==='은행') h+=(row['은행']||'').toLowerCase();
+      if(!cf||cf==='계좌번호') h+=String(row['계좌번호']||'').toLowerCase();
+      if(!h.includes(q)) return false;
+    }
+    if(af==='has'&&!M.some(m=>row[m]>0)) return false;
+    if(af==='none'&&M.some(m=>row[m]>0)) return false;
+    return true;
+  });
+  render();
+}
+
+function render(){
+  thead(); yearSelect(); monthSelect();
+  const s=[...fd].sort((a,b)=>{
+    let av,bv;
+    if(sc==='금액'){av=a[selM]||0;bv=b[selM]||0;}
+    else if(sc==='id'){av=a.id;bv=b.id;}
+    else{av=(a[sc]||'').toString();bv=(b[sc]||'').toString();}
+    if(av<bv) return sa?-1:1; if(av>bv) return sa?1:-1; return 0;
+  });
+
+  const totSel=fd.reduce((s,r)=>s+(r[selM]||0),0);
+
+  const tb=document.getElementById('tbody');
+  const addRowHtml='<tr class="addrow" onclick="addRow()"><td colspan="7">+ 새 협력사 행 추가</td></tr>';
+  if(!s.length){
+    tb.innerHTML='<tr><td colspan="99" class="nodata">조회 결과가 없습니다</td></tr>'+addRowHtml;
+  }else{
+    tb.innerHTML=s.map(row=>{
+      const av=row[selM];
+      const tx=row['과세기사콜비부가세'];
+      const me=esc(mm[row.id]||'');
+      return `<tr>
+        <td class="mc"><input class="mi pn" placeholder="협력사명 입력..." value="${esc(row['협력사']||'')}" oninput="saveCompany(${row.id},this.value)"></td>
+        <td class="mc"><input class="mi" placeholder="은행 입력..." value="${esc(row['은행']||'')}" oninput="saveBank(${row.id},this.value)"></td>
+        <td class="mc"><input class="mi" placeholder="계좌번호 입력..." value="${esc(String(row['계좌번호']||''))}" oninput="saveAccount(${row.id},this.value)"></td>
+        <td class="mc"><input class="mi amt" placeholder="금액 입력..." value="${fmt(av)}" onchange="saveAmt(${row.id},this.value)"></td>
+        <td class="mc"><input class="mi amt" placeholder="금액 입력..." value="${fmt(tx)}" onchange="saveTax(${row.id},this.value)"></td>
+        <td class="mc"><input class="mi" placeholder="메모..." value="${me}" oninput="saveMemo(${row.id},this.value)"></td>
+        <td style="text-align:center"><button class="dbtn" onclick="deleteRow(${row.id})">삭제</button></td>
+      </tr>`;
+    }).join('');
+    tb.innerHTML+=addRowHtml;
+    tb.innerHTML+=`<tr class="total"><td>✦ 합계</td><td></td><td></td><td class="am">${fmt(totSel)}</td><td></td><td></td><td></td></tr>`;
+  }
+
+  document.getElementById('resetAmtBtn').textContent=`${selM} 금액 전체 초기화`;
+  document.getElementById('stats').innerHTML=`
+    <div class="scard"><div class="slabel">협력사 수</div><div class="sval a">${fd.length}개</div></div>
+    <div class="scard"><div class="slabel">${selY} ${selM} 총 지급금액 (원)</div><div class="sval g">${fmt(totSel)}</div></div>
+  `;
+  document.getElementById('rct').textContent=`총 ${fd.length}개 협력사 표시 (전체 ${D.length}개)`;
+}
+
+let _saveTimer=null;
+function autoSave(){
+  try{localStorage.setItem(STORAGE_KEY,JSON.stringify({D,mm}));}catch(e){return;}
+  const el=document.getElementById('saveIndicator');
+  if(!el) return;
+  el.textContent='✓ 자동 저장됨';
+  clearTimeout(_saveTimer);
+  _saveTimer=setTimeout(()=>{el.textContent='';},1500);
+}
+
+function saveMemo(id,v){mm[id]=v;autoSave();}
+function saveBank(id,v){const row=D.find(r=>r.id===id);if(row){row['은행']=v;autoSave();}}
+function saveAccount(id,v){const row=D.find(r=>r.id===id);if(row){row['계좌번호']=v;autoSave();}}
+function saveCompany(id,v){const row=D.find(r=>r.id===id);if(row){row['협력사']=v;autoSave();}}
+function saveAmt(id,v){
+  const row=D.find(r=>r.id===id);
+  if(!row) return;
+  const num=Number(String(v).replace(/[^0-9.-]/g,''));
+  if(num) row[selM]=num; else delete row[selM];
+  autoSave();render();
+}
+function saveTax(id,v){
+  const row=D.find(r=>r.id===id);
+  if(!row) return;
+  const num=Number(String(v).replace(/[^0-9.-]/g,''));
+  if(num) row['과세기사콜비부가세']=num; else delete row['과세기사콜비부가세'];
+  autoSave();render();
+}
+
+function addRow(){
+  const id=D.length?Math.max(...D.map(r=>r.id))+1:0;
+  D.push({'협력사':'새 협력사','은행':'','계좌번호':'','id':id,'memo':''});
+  mm[id]='';
+  sc='id';sa=true;
+  autoSave();applyF();
+}
+
+function deleteRow(id){
+  if(!confirm('이 행을 삭제하시겠습니까?')) return;
+  const idx=D.findIndex(r=>r.id===id);
+  if(idx>-1) D.splice(idx,1);
+  delete mm[id];
+  autoSave();applyF();
+}
+
+function resetAmounts(){
+  if(!confirm(`${selM} 금액을 전체 초기화하시겠습니까?`)) return;
+  D.forEach(r=>{delete r[selM];});
+  autoSave();applyF();
+}
+
+function exportExcel(){
+  const wb=XLSX.utils.book_new();
+  const h=['협력사','은행','계좌번호',...M,'합계','과세기사콜비부가세','메모'];
+  const rows=D.map(r=>[r['협력사']||'',r['은행']||'',String(r['계좌번호']||''),...M.map(m=>r[m]||''),rt(r),r['과세기사콜비부가세']||'',mm[r.id]||'']);
+  const tots=M.map(m=>D.reduce((s,r)=>s+(r[m]||0),0));
+  const g=D.reduce((s,r)=>s+rt(r),0);
+  rows.push(['합계','','',...tots,g,'','']);
+  const ws=XLSX.utils.aoa_to_sheet([h,...rows]);
+  ws['!cols']=[{wch:25},{wch:14},{wch:20},...M.map(()=>({wch:14})),{wch:16},{wch:16},{wch:30}];
+  XLSX.utils.book_append_sheet(wb,ws,'카드충전수수료');
+  const mr=D.filter(r=>mm[r.id]).map(r=>[r['협력사'],mm[r.id]]);
+  if(mr.length){
+    const mws=XLSX.utils.aoa_to_sheet([['협력사','메모'],...mr]);
+    XLSX.utils.book_append_sheet(wb,mws,'메모');
+  }
+  const d=new Date();
+  XLSX.writeFile(wb,`카드충전수수료_${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}.xlsx`);
+}
+
+yearSelect(); monthSelect(); applyF();
+</script>
+</body>
+</html>
