@@ -33,13 +33,14 @@ select.fs:focus{border-color:var(--accent)}select.fs option{background:var(--bg3
 .tc{overflow-x:auto;max-height:calc(100vh - 370px);overflow-y:auto}
 table{width:100%;border-collapse:collapse;min-width:900px;table-layout:fixed}
 thead{position:sticky;top:0;z-index:10}
-th:nth-child(1),td:nth-child(1){width:15%}
-th:nth-child(2),td:nth-child(2){width:8%}
-th:nth-child(3),td:nth-child(3){width:12%}
-th:nth-child(4),td:nth-child(4){width:10%}
-th:nth-child(5),td:nth-child(5){width:12%}
-th:nth-child(6),td:nth-child(6){width:36%}
-th:nth-child(7),td:nth-child(7){width:7%}
+th:nth-child(1),td:nth-child(1){width:14%}
+th:nth-child(2),td:nth-child(2){width:7%}
+th:nth-child(3),td:nth-child(3){width:11%}
+th:nth-child(4),td:nth-child(4){width:9%}
+th:nth-child(5),td:nth-child(5){width:11%}
+th:nth-child(6),td:nth-child(6){width:9%}
+th:nth-child(7),td:nth-child(7){width:32%}
+th:nth-child(8),td:nth-child(8){width:7%}
 th{background:var(--bg3);color:var(--text2);font-weight:600;font-size:11px;letter-spacing:.4px;text-transform:uppercase;padding:11px 12px;text-align:left;border-bottom:1px solid var(--border);white-space:nowrap;user-select:none;cursor:pointer}
 th:hover{color:var(--text)}.si2{margin-left:4px;color:var(--text3);font-size:10px}
 th.sorted{color:var(--accent2)}
@@ -55,6 +56,11 @@ tr.addrow:hover td{background:var(--accent-bg);color:var(--accent2)}
 input.mi{width:100%;background:transparent;border:1px solid transparent;border-radius:5px;color:var(--text);font-size:12px;font-family:inherit;padding:3px 6px;outline:none}
 input.mi:hover{border-color:var(--border2);background:var(--bg3)}input.mi:focus{border-color:var(--accent);background:var(--bg3)}input.mi::placeholder{color:var(--text3)}
 input.mi.amt{text-align:right}
+select.status{width:100%;background:var(--bg2);border:1px solid var(--border);border-radius:5px;color:var(--text);font-size:12px;font-family:inherit;padding:3px 5px;outline:none;cursor:pointer}
+select.status:hover{border-color:var(--border2);background:var(--bg3)}
+select.status:focus{border-color:var(--accent)}
+select.status.done{background:rgba(30,122,59,.12);border-color:var(--green);color:var(--green)}
+select.status.pend{background:rgba(201,53,53,.10);border-color:var(--accent);color:var(--accent)}
 .pn{font-weight:600;overflow:hidden;text-overflow:ellipsis}
 .mh{text-align:right}
 .nodata{padding:40px;text-align:center;color:var(--text3)}
@@ -157,6 +163,7 @@ function thead(){
     {k:'협력사',l:'협력사'},{k:'은행',l:'은행'},{k:'계좌번호',l:'계좌번호'},
     {k:'금액',l:`${selY} ${selM} 금액`,mo:true},
     {k:'과세기사콜비부가세',l:'과세기사콜비부가세',mo:true,ns:true},
+    {k:'수수료지급완료',l:'수수료지급완료',ns:true},
     {k:'memo',l:'메모',ns:true},
     {k:'관리',l:'관리',ns:true}
   ];
@@ -210,7 +217,7 @@ function render(){
   const totSel=fd.reduce((s,r)=>s+(r[selM]||0),0);
 
   const tb=document.getElementById('tbody');
-  const addRowHtml='<tr class="addrow" onclick="addRow()"><td colspan="7">+ 새 협력사 행 추가</td></tr>';
+  const addRowHtml='<tr class="addrow" onclick="addRow()"><td colspan="8">+ 새 협력사 행 추가</td></tr>';
   if(!s.length){
     tb.innerHTML='<tr><td colspan="99" class="nodata">조회 결과가 없습니다</td></tr>'+addRowHtml;
   }else{
@@ -224,12 +231,13 @@ function render(){
         <td class="mc"><input class="mi" placeholder="계좌번호 입력..." value="${esc(String(row['계좌번호']||''))}" oninput="saveAccount(${row.id},this.value)"></td>
         <td class="mc"><input class="mi amt" placeholder="금액 입력..." value="${fmt(av)}" onchange="saveAmt(${row.id},this.value)"></td>
         <td class="mc"><input class="mi amt" placeholder="금액 입력..." value="${fmt(tx)}" onchange="saveTax(${row.id},this.value)"></td>
+        <td class="mc">${statusSelect(row)}</td>
         <td class="mc"><input class="mi" placeholder="메모..." value="${me}" oninput="saveMemo(${row.id},this.value)"></td>
         <td style="text-align:center"><button class="dbtn" onclick="deleteRow(${row.id})">삭제</button></td>
       </tr>`;
     }).join('');
     tb.innerHTML+=addRowHtml;
-    tb.innerHTML+=`<tr class="total"><td>✦ 합계</td><td></td><td></td><td class="am">${fmt(totSel)}</td><td></td><td></td><td></td></tr>`;
+    tb.innerHTML+=`<tr class="total"><td>✦ 합계</td><td></td><td></td><td class="am">${fmt(totSel)}</td><td></td><td></td><td></td><td></td></tr>`;
   }
 
   document.getElementById('resetAmtBtn').textContent=`${selM} 금액 전체 초기화`;
@@ -267,6 +275,23 @@ function saveTax(id,v){
   const num=Number(String(v).replace(/[^0-9.-]/g,''));
   if(num) row['과세기사콜비부가세']=num; else delete row['과세기사콜비부가세'];
   autoSave();render();
+}
+
+function saveStatus(id,v){
+  const row=D.find(r=>r.id===id);
+  if(!row) return;
+  if(v) row['수수료지급완료']=v; else delete row['수수료지급완료'];
+  autoSave();
+}
+function statusSelect(row){
+  const v=row['수수료지급완료']||'';
+  const cls=v==='완료'?'done':v==='미완료'?'pend':'';
+  const opts=[
+    {val:'',lbl:'-'},
+    {val:'완료',lbl:'✓ 완료'},
+    {val:'미완료',lbl:'✗ 미완료'}
+  ].map(o=>`<option value="${o.val}"${v===o.val?' selected':''}>${o.lbl}</option>`).join('');
+  return `<select class="status${cls?' '+cls:''}" onchange="saveStatus(${row.id},this.value);this.className='status'+(this.value==='완료'?' done':this.value==='미완료'?' pend':'')">${opts}</select>`;
 }
 
 function addRow(){
