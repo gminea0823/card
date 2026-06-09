@@ -6,7 +6,7 @@
 <title>카드충전수수료 지급내역</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
-:root{--bg:#0f1117;--bg2:#1a1d27;--bg3:#22263a;--border:#2e3348;--border2:#3d4262;--text:#e8eaf6;--text2:#9ba3c7;--text3:#5c6490;--accent:#5c73f2;--accent2:#7b93ff;--accent-bg:rgba(92,115,242,.12);--green:#3ecf8e}
+:root{--bg:#F5F2EE;--bg2:#EDEAE5;--bg3:#E4E0DA;--border:#D5D0C9;--border2:#C4BEB6;--text:#2B2825;--text2:#6B6460;--text3:#A99E98;--accent:#C93535;--accent2:#A82828;--accent-bg:rgba(201,53,53,.10);--green:#1E7A3B}
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',-apple-system,sans-serif;font-size:13px}
 .topbar{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
@@ -27,7 +27,7 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',-apple-sy
 .sw svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--text3)}
 input.si{width:100%;padding:8px 12px 8px 34px;background:var(--bg3);border:1px solid var(--border2);border-radius:7px;color:var(--text);font-size:13px;font-family:inherit;outline:none}
 input.si:focus{border-color:var(--accent)}input.si::placeholder{color:var(--text3)}
-select.fs{padding:8px 26px 8px 10px;background:var(--bg3);border:1px solid var(--border2);border-radius:7px;color:var(--text);font-size:12px;font-family:inherit;outline:none;cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg width='10' height='6' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%235c6490' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;min-width:90px}
+select.fs{padding:8px 26px 8px 10px;background:var(--bg3);border:1px solid var(--border2);border-radius:7px;color:var(--text);font-size:12px;font-family:inherit;outline:none;cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg width='10' height='6' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23A99E98' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;min-width:90px}
 select.fs:focus{border-color:var(--accent)}select.fs option{background:var(--bg3)}
 .tw{background:var(--bg2);border:1px solid var(--border);border-radius:10px;overflow:hidden}
 .tc{overflow-x:auto;max-height:calc(100vh - 370px);overflow-y:auto}
@@ -45,7 +45,7 @@ th:hover{color:var(--text)}.si2{margin-left:4px;color:var(--text3);font-size:10p
 th.sorted{color:var(--accent2)}
 td{padding:9px 12px;border-bottom:1px solid var(--border);vertical-align:middle;white-space:nowrap}
 tr:last-child td{border-bottom:none}
-tr:hover td{background:rgba(92,115,242,.04)}
+tr:hover td{background:rgba(201,53,53,.04)}
 tr.total td{background:var(--bg3);border-top:2px solid var(--border2);font-weight:700;color:var(--accent2)}
 tr.addrow td{text-align:center;padding:12px;color:var(--text3);cursor:pointer;font-weight:600;transition:all .15s}
 tr.addrow:hover td{background:var(--accent-bg);color:var(--accent2)}
