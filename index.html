@@ -179,7 +179,7 @@ async function loadFromDB() {
         const obj = { id: row.id, 협력사: row.company||'', 은행: row.bank||'', 계좌번호: row.account||'', memo: row.memo||'' };
         if (row.amounts) Object.assign(obj, row.amounts);
         if (row.tax) obj['과세기사콜비부가세'] = row.tax;
-        if (row.status) obj['수수료지급완료'] = row.status;
+        try { obj['수수료지급완료'] = row.status ? JSON.parse(row.status) : {}; } catch(e) { obj['수수료지급완료'] = {}; }
         return obj;
       });
     }
@@ -203,7 +203,7 @@ async function uploadInitData() {
       account: String(r['계좌번호']||''),
       amounts: amounts,
       tax: r['과세기사콜비부가세']||0,
-      status: r['수수료지급완료']||'',
+      status: JSON.stringify(r['수수료지급완료']||{}),
       memo: r.memo||''
     };
   });
@@ -232,7 +232,7 @@ async function saveRow(id) {
           account: String(row['계좌번호']||''),
           amounts: amounts,
           tax: row['과세기사콜비부가세']||0,
-          status: row['수수료지급완료']||'',
+          status: JSON.stringify(row['수수료지급완료']||{}),
           memo: row.memo||'',
           updated_at: new Date().toISOString()
         })
@@ -374,11 +374,12 @@ function saveTax(id,v){
 function saveStatus(id,v){
   const row=D.find(r=>r.id===id);
   if(!row) return;
-  if(v) row['수수료지급완료']=v; else delete row['수수료지급완료'];
+  if(!row['수수료지급완료']) row['수수료지급완료']={};
+  if(v) row['수수료지급완료'][selM]=v; else delete row['수수료지급완료'][selM];
   saveRow(id);
 }
 function statusSelect(row){
-  const v=row['수수료지급완료']||'';
+  const v=(row['수수료지급완료']||{})[selM]||'';
   const cls=v==='완료'?'done':v==='미완료'?'pend':'';
   const opts=[
     {val:'',lbl:'-'},
@@ -390,11 +391,11 @@ function statusSelect(row){
 
 async function addRow(){
   const id=D.length?Math.max(...D.map(r=>r.id))+1:0;
-  const newRow={'협력사':'새 협력사','은행':'','계좌번호':'','id':id,'memo':''};
+  const newRow={'협력사':'새 협력사','은행':'','계좌번호':'','id':id,'memo':'','수수료지급완료':{}};
   try {
     await sbFetch(TABLE, {
       method:'POST',
-      body: JSON.stringify({id, company:'새 협력사', bank:'', account:'', amounts:{}, tax:0, status:'', memo:''})
+      body: JSON.stringify({id, company:'새 협력사', bank:'', account:'', amounts:{}, tax:0, status:'{}', memo:''})
     });
     D.push(newRow);
     sc='id';sa=true;
